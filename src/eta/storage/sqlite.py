@@ -1,10 +1,10 @@
+from pathlib import Path
 from datetime import datetime, timezone
 import sqlite3
 from typing import Self
 
 from eta import config
 from eta.models import Operator
-from eta.storage.base import StaticDB
 
 DB_FILE_NAME = "eta.sqlite3"
 
@@ -28,11 +28,12 @@ DROP TABLE IF EXISTS operators;
 DROP TABLE IF EXISTS updates;
 """
 
-class SQLiteStaticDB(StaticDB):
+class SQLiteStaticDB:
 
-    def __init__(self: Self) -> None:
+    def __init__(self: Self, path: Path | None = None) -> None:
 
-        self._connection = sqlite3.connect(config.path_db(DB_FILE_NAME))
+        path = path or config.path_db(DB_FILE_NAME)
+        self._connection = sqlite3.connect(path)
         self.prepare()
 
     def prepare(self: Self) -> None:
@@ -45,7 +46,6 @@ class SQLiteStaticDB(StaticDB):
 
         self._connection.executescript(CREATE_SQL)        
 
-    @property
     def connection(self: Self) -> sqlite3.Connection:
 
         return self._connection

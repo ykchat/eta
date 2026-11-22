@@ -1,6 +1,6 @@
 import os
 import asyncio
-from typing import Any, Self, TypeVar
+from typing import Any, Self
 
 import httpx
 from pydantic import BaseModel
@@ -17,15 +17,18 @@ ACCESS_TOKEN_MASK = "ACCESS_TOKEN_IS_MASKED"
 
 MAX_CONCURRENT_REQUESTS = 1
 
-M = TypeVar("M", bound=BaseModel)
-
 def redact_access_token(request: httpx.Request) -> None:
 
     request.url = request.url.copy_set_param(ACCESS_TOKEN_PARAM, ACCESS_TOKEN_MASK)
 
 class ODPTClient:
 
-    def __init__(self: Self, access_token: str | None = None, base_url: str = BASE_URL) -> None:
+    def __init__(
+            self: Self, 
+            access_token: str | None = None, 
+            base_url: str = BASE_URL,
+            transport: httpx.AsyncBaseTransport | None = None,
+        ) -> None:
 
         if not access_token:
             config.load_env(ENV_FILE_NAME)
@@ -37,6 +40,7 @@ class ODPTClient:
                 base_url = base_url,
                 params = {ACCESS_TOKEN_PARAM: access_token},
                 headers = {"Accept": "application/json"},
+                transport = transport,
             )
 
         self._semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
@@ -57,16 +61,10 @@ class ODPTClient:
 
         return body
 
-    async def build(self: Self, model: type[M], rdf_type: str, params: dict[str, str] | None = None) -> list[M]:
+    async def build[M: BaseModel](self, model: type[M], rdf_type: str, params: dict[str, str] | None = None) -> list[M]:
 
         return [model.model_validate(item) for item in await self.get(rdf_type, params)]
 
     async def aclose(self: Self) -> None:
 
         await self._client.aclose()
-
-    async def __aenter__(self) -> Self:
-        return self
-
-    async def __aexit__(self, *exc: object) -> None:
-        await self.aclose()

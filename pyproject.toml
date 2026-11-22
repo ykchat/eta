@@ -16,21 +16,18 @@ dependencies = [
 ]
 
 [project.scripts]
-eta = "eta.cli:app"
+eta = "eta.cli.app:app"
 
 [build-system]
 requires = ["uv_build>=0.13.8,<0.14.0"]
 build-backend = "uv_build"
 
-[dependency-groups]
-dev = [
-    "pytest",
-]
-
 [tool.pyright]
-strict = true
-exclude = "(^build/|^dist/)"
-show_error_codes = true
+include = ["src", "tests"]
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -49,11 +46,13 @@ default = { solve-group = "default" }
 features = ["dev"]
 solve-group = "default"
 
-[tool.pixi.feature.dev.dependencies]
-pyright = ">=1.1.414,<2"
-
 [tool.pixi.tasks]
 eta = "eta"
 
 [tool.pixi.feature.dev.tasks]
 typecheck = "pyright"
+test = "pytest"
+
+[tool.pixi.feature.dev.dependencies]
+pytest = ">=9.2.0,<10"
+pyright = ">=1.1.414,<2"

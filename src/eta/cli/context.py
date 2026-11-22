@@ -1,16 +1,15 @@
 import asyncio
-from contextlib import AsyncExitStack, closing
+from contextlib import AsyncExitStack, aclosing, closing
 from collections.abc import Callable, Awaitable
 from typing import Self, Concatenate
 
-from eta.context import Context
 from eta.providers.base import Provider
 from eta.providers.odpt.client import ODPTClient
 from eta.providers.odpt.provider import ODPTProvider
 from eta.storage.base import StaticDB
 from eta.storage.sqlite import SQLiteStaticDB
 
-class AppContext(Context):
+class AppContext:
 
     def __init__(self: Self, stack: AsyncExitStack) -> None:
 
@@ -21,18 +20,17 @@ class AppContext(Context):
     async def provider(self: Self) -> Provider:
 
         if self._provider is None:
-            client = await self._stack.enter_async_context(ODPTClient())
+            client = await self._stack.enter_async_context(aclosing(ODPTClient()))
             self._provider = ODPTProvider(client)
 
         return self._provider
 
-    @property
     def static_db(self: Self) -> StaticDB:
 
         if self._static_db is None:
             self._static_db = SQLiteStaticDB()
-            self._stack.enter_context(closing(self._static_db.connection))
-            self._stack.enter_context(self._static_db.connection)
+            self._stack.enter_context(closing(self._static_db.connection()))
+            self._stack.enter_context(self._static_db.connection())
 
         return self._static_db
 

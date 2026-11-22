@@ -11,7 +11,6 @@ class ODPTModel(BaseModel):
     id: str = Field(alias="owl:sameAs")
     title: str | None = Field(default=None, alias="dc:title")
 
-    @property
     def name(self: Self) -> str:
 
         return self.id.split(":", 1)[-1]
@@ -28,4 +27,4 @@ class ODPTOperator(ODPTModel):
         if self.title:
             titles.setdefault("ja", self.title)
 
-        return Operator(id=self.id, name=self.name, titles=titles)
+        return Operator(id=self.id, name=self.name(), titles=titles)

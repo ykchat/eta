@@ -5,9 +5,14 @@ import typer
 from eta.cli import context, render
 from eta import services
 
-app = typer.Typer(add_completion=False, no_args_is_help=True, pretty_exceptions_show_locals=False)
+app = typer.Typer(
+    help="Show bus arrival information.",
+    add_completion=False, 
+    no_args_is_help=True, 
+    pretty_exceptions_show_locals=False
+)
 
-@app.command("search")
+@app.command("search", help="Search by part of a name.")
 @render.handle_errors
 def search(
     query: Annotated[str | None, typer.Argument(help="Part of a name (all when omitted)")] = None,
@@ -21,10 +26,10 @@ def search(
     operators = context.call(services.get_operators, query)
     render.show_operators(operators, query)  
 
-@app.command("update")
+@app.command("update", help="Import local data.")
 @render.handle_errors
 def update(
-    to_operator: Annotated[bool, typer.Option("--operator", help="Update operators")] = False,
+    to_operator: Annotated[bool, typer.Option("--operator", help="Import operators")] = False,
 ) -> None:
 
     if not to_operator:

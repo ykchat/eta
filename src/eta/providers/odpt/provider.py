@@ -1,11 +1,10 @@
 from typing import Self
 
 from eta.models import Operator
-from eta.providers.base import Provider
 from eta.providers.odpt.client import ODPTClient
 from eta.providers.odpt.models import ODPTOperator
 
-class ODPTProvider(Provider):
+class ODPTProvider:
 
     def __init__(self: Self, client: ODPTClient) -> None:
 
