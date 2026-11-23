@@ -24,7 +24,7 @@ jobs:
 
       - run: pixi run -e dev test
 
-      - uses: dorny/test-reporter@v2
+      - uses: dorny/test-reporter@v3
         if: ${{ !cancelled() }}          # テストが失敗しても、結果は出す
         with:
           name: pytest
