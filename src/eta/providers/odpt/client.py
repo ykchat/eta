@@ -49,7 +49,7 @@ class ODPTClient:
 
         self._semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
-    async def send(self, path: str, params: dict[str, str] | None = None, headers: dict[str, str] | None = None) -> httpx.Response:
+    async def get(self, path: str, params: dict[str, str] | None = None, headers: dict[str, str] | None = None) -> httpx.Response:
 
         try:
             async with self._semaphore:
@@ -67,13 +67,13 @@ class ODPTClient:
 
         headers = {"Accept": "application/json"}
 
-        response = await self.send(rdf_type, params, headers)
+        response = await self.get(rdf_type, params, headers)
 
         return response.json()
 
     async def get_files(self, operator: str, name: str, date: str, target_file_names: Iterable[str]) -> dict[str, str]:
 
-        response = await self.send(f"files/odpt/{operator}/{name}.zip", {"date": date})
+        response = await self.get(f"files/odpt/{operator}/{name}.zip", {"date": date})
 
         content =  response.content
 

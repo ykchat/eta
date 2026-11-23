@@ -9,7 +9,6 @@ from rich.markup import escape
 
 from eta import config
 from eta.models import Operator
-from eta.providers.odpt import client
 
 console = Console()
 
@@ -21,7 +20,6 @@ def handle_errors[**P, T](command: Callable[P, T]) -> Callable[P, T]:
             return command(*args, **kwargs)
         except config.ConfigError as error:
             console.print(f"[red]{error}[/]")
-            console.print(f"[dim]{client.ENV_FILE_NAME} を確認してください[/]")
             raise typer.Exit(1)
         except httpx.HTTPStatusError as error:
             console.print(f"[dim]{escape(str(error).splitlines()[0])}[/]")

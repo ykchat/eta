@@ -5,7 +5,7 @@ async def update_operators(context: Context) -> list[Operator]:
 
     provider = await context.provider()
     operators = await provider.get_operators()
-    context.static_db().save_operators(operators)
+    context.static_db().save_operators("odpt_json", operators)
 
     return operators
 

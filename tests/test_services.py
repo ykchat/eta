@@ -34,7 +34,7 @@ class FakeStaticDB:
 
         return self.operators
 
-    def save_operators(self: Self, operators: list[Operator]) -> None:
+    def save_operators(self: Self, source_id: str, operators: list[Operator]) -> None:
 
         self.operators = operators
 

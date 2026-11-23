@@ -8,20 +8,19 @@ from eta.models import Operator
 
 SQLITE_FILE_NAME = "eta.sqlite3"
 
-SCHEMA_VERSION = 26112201
-
-GTFS_FILE_NAMES = ("agency.txt",) 
+SCHEMA_VERSION = 26112301
 
 CREATE_SQL = """
 CREATE TABLE IF NOT EXISTS operators (
-    id       TEXT PRIMARY KEY,   -- id of Operator
-    operator TEXT NOT NULL       -- json of Operator
+    id        TEXT PRIMARY KEY,   -- id of Operator
+    source_id TEXT NOT NULL,      -- id of Source
+    operator  TEXT NOT NULL       -- json of Operator
 );
 CREATE TABLE IF NOT EXISTS updates (
     table_name  TEXT NOT NULL,            -- name of Table
-    operator_id TEXT NOT NULL DEFAULT '', -- id of Operator
+    source_id   TEXT NOT NULL,            -- id of Sourc
     updated_at  TEXT NOT NULL,            -- ISO 8601(UTC)
-    PRIMARY KEY (table_name, operator_id)
+    PRIMARY KEY (table_name, source_id)
 );
 """
 
@@ -58,16 +57,16 @@ class SQLiteStaticDB:
 
         return [Operator.model_validate_json(operator) for (operator,) in operators]
 
-    def save_operators(self: Self, operators: list[Operator]) -> None:
+    def save_operators(self: Self, source_id: str, operators: list[Operator]) -> None:
 
-        self._connection.execute("DELETE FROM operators")
+        self._connection.execute("DELETE FROM operators WHERE source_id = ?", (source_id,))
 
         self._connection.executemany(
-            "INSERT INTO operators (id, operator) VALUES (?, ?)",
-            [(operator.id, operator.model_dump_json()) for operator in operators],
+            "INSERT INTO operators (id, source_id, operator) VALUES (?, ?, ?)",
+            [(operator.id, source_id, operator.model_dump_json()) for operator in operators],
         )
 
         self._connection.execute(
-            "INSERT OR REPLACE INTO updates (table_name, operator_id, updated_at) VALUES ('operators', '', ?)",
-            (datetime.now(timezone.utc).isoformat(),),
-        )        
+            "INSERT OR REPLACE INTO updates (table_name, source_id, updated_at) VALUES ('operators', ?, ?)",
+            (source_id, datetime.now(timezone.utc).isoformat()),
+        )

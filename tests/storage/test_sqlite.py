@@ -23,7 +23,7 @@ def test_save_and_get_operators(tmp_path: Path) -> None:
 
     with closing(static_db.connection()):
 
-        static_db.save_operators([TOEI, RINKO])
+        static_db.save_operators("odpt_json", [TOEI, RINKO])
 
         assert static_db.get_operators() == [RINKO, TOEI] # id の順に並ぶ
 
@@ -32,10 +32,20 @@ def test_save_replaces_all(tmp_path: Path) -> None:
     static_db = SQLiteStaticDB(tmp_path / SQLITE_FILE_NAME)
 
     with closing(static_db.connection()):
-        static_db.save_operators([TOEI, RINKO])
-        static_db.save_operators([TOEI]) # 保存し直すと、前の事業者は残らない
+        static_db.save_operators("odpt_json", [TOEI, RINKO])
+        static_db.save_operators("odpt_json", [TOEI]) # 保存し直すと、前の事業者は残らない
 
         assert static_db.get_operators() == [TOEI]
+
+def test_save_keeps_other_sources(tmp_path: Path) -> None:
+
+    static_db = SQLiteStaticDB(tmp_path / SQLITE_FILE_NAME)
+
+    with closing(static_db.connection()):
+        static_db.save_operators("odpt_json", [TOEI])
+        static_db.save_operators("odpt_gtfs", [RINKO]) # ほかの取得元の事業者は残る
+
+        assert static_db.get_operators() == [RINKO, TOEI]
 
 def test_saved_operators_remain_after_commit(tmp_path: Path) -> None:
 
@@ -43,7 +53,7 @@ def test_saved_operators_remain_after_commit(tmp_path: Path) -> None:
 
     with closing(static_db.connection()): # close のみ
         with static_db.connection(): # commit/roleback のみ
-            static_db.save_operators([TOEI])
+            static_db.save_operators("odpt_json", [TOEI])
 
     static_db = SQLiteStaticDB(tmp_path / SQLITE_FILE_NAME)
 
