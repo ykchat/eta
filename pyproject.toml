@@ -22,18 +22,13 @@ eta = "eta.cli.app:app"
 requires = ["uv_build>=0.13.8,<0.14.0"]
 build-backend = "uv_build"
 
-[tool.pyright]
-include = ["src", "tests"]
-typeCheckingMode = "strict"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = ["--import-mode=importlib"]
-pythonpath = ["."] 
-
+# pixi 共通
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["win-64"]
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
 
 [tool.pixi.dependencies]
 python = "3.15.*"
@@ -46,21 +41,47 @@ typer = ">=0.29.2,<0.30"
 [tool.pixi.pypi-dependencies]
 eta = { path = ".", editable = true }
 
-[tool.pixi.environments]
-default = { solve-group = "default" }
+[tool.pixi.tasks]
+eta = "eta"
+eta-bws = "bws run --project-id $BWS_PROJECT_ID -- eta"
+
+# pixi dev
 
 [tool.pixi.environments.dev]
 features = ["dev"]
 solve-group = "default"
 
-[tool.pixi.tasks]
-eta = "eta"
-eta-bws = "bws run --project-id $BWS_PROJECT_ID -- eta"
+[tool.pixi.feature.dev.dependencies]
+pytest = ">=9.2.0,<10"
+pyright = ">=1.1.414,<2"
 
 [tool.pixi.feature.dev.tasks]
 typecheck = "pyright"
 test = "pytest"
 
-[tool.pixi.feature.dev.dependencies]
-pytest = ">=9.2.0,<10"
-pyright = ">=1.1.414,<2"
+# pytest
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
+pythonpath = ["."]
+
+# pyright
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "strict"
+
+# pixi audit
+
+[tool.pixi.environments.audit]
+features = ["audit"]
+no-default-feature = true
+
+[tool.pixi.feature.audit.dependencies]
+python = "3.14.*"
+pip-audit = "*"
+filelock = ">=4.3.0,<5"
+
+[tool.pixi.feature.audit.tasks]
+audit = "pip-audit --path .pixi/envs/dev/lib/python/site-packages --skip-editable"
