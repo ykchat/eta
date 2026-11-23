@@ -4,12 +4,11 @@ from typing import Any
 
 from dotenv import load_dotenv
 
+from eta.errors import ConfigError
+
 ENV_DIR_PATH = Path(".secrets")
 DB_DIR_PATH = Path(".cache")
 CONFIG_DIR_PATH = Path(".eta")
-
-class ConfigError(Exception):
-    pass
 
 def load_env(file_name: str) -> None:
 

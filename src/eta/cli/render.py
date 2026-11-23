@@ -7,8 +7,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.markup import escape
 
-from eta import config
 from eta.models import Operator
+from eta.errors import ConfigError, SourceNotFoundError
 
 console = Console()
 
@@ -18,8 +18,11 @@ def handle_errors[**P, T](command: Callable[P, T]) -> Callable[P, T]:
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         try:
             return command(*args, **kwargs)
-        except config.ConfigError as error:
-            console.print(f"[red]{error}[/]")
+        except ConfigError as error:
+            console.print(f"[red]{escape(str(error))}[/]")
+            raise typer.Exit(1)
+        except SourceNotFoundError as error:
+            console.print(f"[red]{escape(str(error))}[/]")
             raise typer.Exit(1)
         except httpx.HTTPStatusError as error:
             console.print(f"[dim]{escape(str(error).splitlines()[0])}[/]")

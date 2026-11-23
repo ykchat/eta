@@ -4,7 +4,7 @@ from contextlib import aclosing
 import httpx
 import pytest
 
-from eta.config import ConfigError
+from eta.errors import ConfigError
 from eta.providers.odpt.client import ODPTClient
 from eta.schemas.odpt import ODPTOperator
 

@@ -1,10 +1,18 @@
 from eta.models import Operator
 from eta.context import Context
+from eta.errors import SourceNotFoundError
 
-async def update_operators(context: Context) -> list[Operator]:
+async def update_operators(context: Context, source_id: str | None = None) -> list[Operator]:
+
+    source_ids = context.source_ids()
+
+    if source_id is not None:
+        if source_id not in source_ids:
+            raise SourceNotFoundError(f"{source_id} not found (choose from {', '.join(source_ids)})")
+        source_ids = [source_id]
 
     operators: list[Operator] = []
-    for source_id in context.source_ids():
+    for source_id in source_ids:
         provider = await context.provider(source_id)
         operators_from_source = await provider.get_operators()
         context.static_db().save_operators(source_id, operators_from_source)

@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from tests import helper
-from eta.config import ConfigError
+from eta.errors import ConfigError
 from eta.models import Operator
 from eta.schemas.odpt import ODPTOperator
 from eta.schemas.gtfs_jp import GTFSAgency

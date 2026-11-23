@@ -33,9 +33,10 @@ def search(
 @render.handle_errors
 def update(
     target: Annotated[Target, typer.Argument(help="What to search")],
+    source_id: Annotated[str | None, typer.Option("--source", help="Source to import (all when omitted)")] = None,
 ) -> None:
 
     match target:
         case Target.OPERATORS:
-            operators = context.call(services.update_operators)
+            operators = context.call(services.update_operators, source_id)
             render.console.print(f"事業者を {len(operators)} 件取り込みました")

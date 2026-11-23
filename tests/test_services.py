@@ -2,7 +2,7 @@ from typing import Self
 
 import pytest
 
-from eta import services
+from eta import services, errors
 from eta.models import Operator
 
 pytestmark = pytest.mark.anyio
@@ -73,6 +73,20 @@ async def test_update_operators() -> None:
 
     assert operators == [TOEI, RINKO]
     assert context.static_db().operators_by_source == {"odpt_json": [TOEI], "odpt_gtfs": [RINKO]}
+
+async def test_update_operators_from_source() -> None:
+
+    context = FakeContext({"odpt_json": [], "odpt_gtfs": []})
+
+    operators = await services.update_operators(context, "odpt_gtfs")
+
+    assert operators == [RINKO]
+    assert context.static_db().operators_by_source == {"odpt_json": [], "odpt_gtfs": [RINKO]}
+
+async def test_update_operators_of_unknown_source() -> None:
+
+    with pytest.raises(errors.SourceNotFoundError):
+        await services.update_operators(FakeContext(), "unknown")
 
 async def test_get_all_operators() -> None:
 
