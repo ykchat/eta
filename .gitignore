@@ -14,6 +14,8 @@ wheels/
 !.pixi/config.toml
 
 .vscode
-.pytest_cache
 
+.pytest_cache
 test-results.xml
+
+tmp

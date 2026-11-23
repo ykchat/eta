@@ -6,6 +6,7 @@ readme = "README.md"
 authors = [
     { name = "ykchat" }
 ]
+license = "MIT"
 requires-python = ">=3.15"
 dependencies = [
     "httpx>=0.28.1",
@@ -58,6 +59,8 @@ pyright = ">=1.1.414,<2"
 [tool.pixi.feature.dev.tasks]
 typecheck = "pyright"
 test = "pytest"
+coverity-capture = "rm -rf tmp/cov-int && coverity capture --dir tmp/cov-int --project-dir src"
+coverity = { cmd = "tar czf tmp/eta-coverity.tgz -C tmp cov-int", depends-on = ["coverity-capture"] }
 
 # pytest
 
