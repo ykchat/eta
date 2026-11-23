@@ -34,13 +34,13 @@ async def test_get_json() -> None:
 
 async def test_get_files() -> None:
 
-    content = helper.make_zip({"agency.txt": "\ufeffagency_id,agency_name\n", "stops.txt": "stop_id\n"})
+    content = helper.make_zip({"agency.txt": "\ufeffagency_id,agency_name\n1,A\n", "stops.txt": "stop_id\n"})
     urls: list[httpx.URL] = []
 
     async with aclosing(ODPTClient("SECRET", transport=helper.mock(body=content, urls=urls))) as client:
         files = await client.get_files("KawasakiTsurumiRinkoBus", "allrinko", "20261101", ["agency.txt", "stops.txt"])
 
-    assert files == {"agency.txt": "agency_id,agency_name\n", "stops.txt": "stop_id\n"}
+    assert files == {"agency.txt": [{"agency_id": "1", "agency_name": "A"}], "stops.txt": []}
     url = urls[0]
     assert url.path == "/api/v4/files/odpt/KawasakiTsurumiRinkoBus/allrinko.zip"
     assert url.params["date"] == "20261101"

@@ -1,6 +1,7 @@
 import os
 import asyncio
 import io
+import csv
 import zipfile
 from typing import Self, Any, Iterable
 
@@ -71,7 +72,7 @@ class ODPTClient:
 
         return response.json()
 
-    async def get_files(self, operator: str, name: str, date: str, target_file_names: Iterable[str]) -> dict[str, str]:
+    async def get_files(self, operator: str, name: str, date: str, target_file_names: Iterable[str]) -> dict[str, list[dict[str, str]]]:
 
         response = await self.get(f"files/odpt/{operator}/{name}.zip", {"date": date})
 
@@ -81,10 +82,11 @@ class ODPTClient:
 
             file_names = set(zip_file.namelist())
 
-            files: dict[str, str] = {}
+            files: dict[str, list[dict[str, str]]] = {}
             for target_file_name in target_file_names:
                 if target_file_name in file_names:
-                    files[target_file_name] = zip_file.read(target_file_name).decode("utf-8-sig")
+                    text = zip_file.read(target_file_name).decode("utf-8-sig")
+                    files[target_file_name] = list(csv.DictReader(io.StringIO(text)))
 
             return files
 

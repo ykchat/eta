@@ -8,6 +8,7 @@ from tests import helper
 from eta.config import ConfigError
 from eta.models import Operator
 from eta.schemas.odpt import ODPTOperator
+from eta.schemas.gtfs_jp import GTFSAgency
 from eta.providers.odpt.client import ODPTClient
 from eta.providers.odpt.provider import ODPTJSONProvider
 from eta.providers.odpt.provider import ODPTGTFSProvider
@@ -15,9 +16,10 @@ from eta.schemas.feeds import ODPTGTFSFeed
 
 pytestmark = pytest.mark.anyio
 
-RINKO = ODPTGTFSFeed(operator="KawasakiTsurumiRinkoBus", name="allrinko", date="20261101")
+RINKO_FEED = ODPTGTFSFeed(operator="KawasakiTsurumiRinkoBus", name="allrinko", date="20261101")
+RINKO_AGENCY = "agency_id,agency_name\n5020001072478,川崎鶴見臨港バス株式会社\n"
 
-def test_build_with_titles() -> None:
+def test_build_operator_with_titles_from_odpt() -> None:
 
     odpt = ODPTOperator.model_validate({
             "owl:sameAs": "odpt.Operator:Toei",
@@ -31,7 +33,7 @@ def test_build_with_titles() -> None:
             titles = {"ja": "東京都交通局", "en": "Bureau of Transportation, Tokyo Metropolitan Government"},
         )
 
-def test_build_without_titles() -> None:
+def test_build_operator_without_titles_from_odpt() -> None:
 
     odpt = ODPTOperator.model_validate({
             "owl:sameAs": "odpt.Operator:Rinko", 
@@ -43,23 +45,40 @@ def test_build_without_titles() -> None:
     assert operator.title("ja") == "川崎鶴見臨港バス"
     assert operator.title("en") is None
 
-def test_build_without_any_title() -> None:
+def test_build_operator_without_any_title_from_odpt() -> None:
 
     odpt = ODPTOperator.model_validate({"owl:sameAs": "odpt.Operator:Unknown"})
 
     assert ODPTJSONProvider.build_operator(odpt).titles == {}
 
+def test_build_operator_from_gtfs() -> None:
 
-async def test_get_feeds() -> None:
+    feed = ODPTGTFSFeed(operator="KawasakiTsurumiRinkoBus", name="allrinko", date="20261101")
 
-    content = helper.make_zip({"agency.txt": "agency_id,agency_name\n5020001072478,川崎鶴見臨港バス株式会社\n"})
+    agency = GTFSAgency.model_validate({
+            "agency_id": "5020001072478",
+            "agency_name": "川崎鶴見臨港バス株式会社",
+            "agency_url": "https://www.rinkobus.co.jp/",
+        })
+
+    assert ODPTGTFSProvider.build_operator(feed, agency) == Operator(
+            id = "odpt.Operator:KawasakiTsurumiRinkoBus",
+            name = "KawasakiTsurumiRinkoBus",
+            titles = {"ja": "川崎鶴見臨港バス株式会社"},
+        )
+
+async def test_get_operators_from_gtfs() -> None:
+
+    content = helper.make_zip({"agency.txt": RINKO_AGENCY})
 
     async with aclosing(ODPTClient("dummy", transport=helper.mock(body=content))) as client:
-        feeds = await ODPTGTFSProvider(client, ["agency.txt"], [RINKO]).get_feed_files()
+        operators = await ODPTGTFSProvider(client, [RINKO_FEED]).get_operators()
 
-    assert feeds == {"odpt.Operator:KawasakiTsurumiRinkoBus": {
-        "agency.txt": "agency_id,agency_name\n5020001072478,川崎鶴見臨港バス株式会社\n",
-    }}
+    assert operators == [Operator(
+            id="odpt.Operator:KawasakiTsurumiRinkoBus",
+            name="KawasakiTsurumiRinkoBus",
+            titles={"ja": "川崎鶴見臨港バス株式会社"},
+        )]
 
 async def test_feeds_from_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
@@ -73,11 +92,11 @@ async def test_feeds_from_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
         encoding="utf-8",
     )
 
-    content = helper.make_zip({})
+    content = helper.make_zip({"agency.txt": RINKO_AGENCY})
 
     urls: list[httpx.URL] = []
     async with aclosing(ODPTClient("dummy", transport=helper.mock(body=content, urls=urls))) as client:
-        await ODPTGTFSProvider(client, ["agency.txt"]).get_feed_files()
+        await ODPTGTFSProvider(client).get_operators()
 
     url = urls[0]
     assert url.path == "/api/v4/files/odpt/KawasakiTsurumiRinkoBus/allrinko.zip"
@@ -88,4 +107,4 @@ async def test_missing_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
 
     async with aclosing(ODPTClient("dummy", transport=helper.mock())) as client:
         with pytest.raises(ConfigError):
-            ODPTGTFSProvider(client, ["agency.txt"])
+            ODPTGTFSProvider(client)

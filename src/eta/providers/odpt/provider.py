@@ -4,6 +4,7 @@ from eta import config
 from eta.models import Operator
 from eta.providers.odpt.client import ODPTClient
 from eta.schemas.odpt import ODPTOperator
+from eta.schemas.gtfs_jp import GTFSAgency
 from eta.schemas.feeds import ODPTGTFSFeed, ODPTGTFSFeeds
 
 GTFS_FEEDS_FILE_NAME = "odpt_gtfs.toml"
@@ -32,20 +33,25 @@ class ODPTJSONProvider:
    
 class ODPTGTFSProvider:
 
-    def __init__(self: Self, client: ODPTClient, target_file_names: Iterable[str], feeds: list[ODPTGTFSFeed] | None = None) -> None:
+    def __init__(self: Self, client: ODPTClient, feeds: list[ODPTGTFSFeed] | None = None) -> None:
 
         if feeds is None:
             feeds = ODPTGTFSFeeds.model_validate(config.load_toml(GTFS_FEEDS_FILE_NAME)).feeds
 
         self._client = client
         self._feeds = feeds
-        self._target_file_names = target_file_names
 
-    async def get_feed_files(self) -> dict[str, dict[str, str]]:
+    async def get_operators(self: Self) -> list[Operator]:
 
-        feed_files: dict[str, dict[str, str]] = {}
+        operators: list[Operator] = []
         for feed in self._feeds:
-            files = await self._client.get_files(feed.operator, feed.name, feed.date, self._target_file_names)
-            feed_files[feed.id()] = files
+            files = await self._client.get_files(feed.operator, feed.name, feed.date, ["agency.txt"])
+            agency = GTFSAgency.model_validate(files["agency.txt"][0])
+            operators.append(ODPTGTFSProvider.build_operator(feed, agency))
 
-        return feed_files
+        return operators
+
+    @classmethod
+    def build_operator(cls: type[Self], feed: ODPTGTFSFeed, agency: GTFSAgency) -> Operator:
+
+        return Operator(id=feed.id(), name=feed.operator, titles={"ja": agency.agency_name})
