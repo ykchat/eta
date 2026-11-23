@@ -2,8 +2,6 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from eta.models import Operator
-
 class ODPTModel(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True, extra="allow", frozen=True)
@@ -19,12 +17,3 @@ class ODPTModel(BaseModel):
 class ODPTOperator(ODPTModel):
 
     titles: dict[str, str] | None = Field(default=None, alias="odpt:operatorTitle")
-
-    def build(self: Self) -> Operator:
-
-        titles = dict(self.titles or {})
-
-        if self.title:
-            titles.setdefault("ja", self.title)
-
-        return Operator(id=self.id, name=self.name(), titles=titles)

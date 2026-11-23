@@ -6,9 +6,11 @@ from typing import Self
 from eta import config
 from eta.models import Operator
 
-DB_FILE_NAME = "eta.sqlite3"
+SQLITE_FILE_NAME = "eta.sqlite3"
 
 SCHEMA_VERSION = 26112201
+
+GTFS_FILE_NAMES = ("agency.txt",) 
 
 CREATE_SQL = """
 CREATE TABLE IF NOT EXISTS operators (
@@ -32,7 +34,7 @@ class SQLiteStaticDB:
 
     def __init__(self: Self, path: Path | None = None) -> None:
 
-        path = path or config.path_db(DB_FILE_NAME)
+        path = path or config.path_db(SQLITE_FILE_NAME)
         self._connection = sqlite3.connect(path)
         self.prepare()
 

@@ -28,6 +28,8 @@ typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["--import-mode=importlib"]
+pythonpath = ["."] 
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -35,6 +37,11 @@ platforms = ["win-64"]
 
 [tool.pixi.dependencies]
 python = "3.15.*"
+pydantic = ">=2.14.4,<3"
+httpx = ">=0.28.1,<0.29"
+python-dotenv = ">=1.2.4,<2"
+rich = ">=15.0.0,<16"
+typer = ">=0.29.2,<0.30"
 
 [tool.pixi.pypi-dependencies]
 eta = { path = ".", editable = true }

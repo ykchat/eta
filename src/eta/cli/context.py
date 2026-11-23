@@ -5,7 +5,7 @@ from typing import Self, Concatenate
 
 from eta.providers.base import Provider
 from eta.providers.odpt.client import ODPTClient
-from eta.providers.odpt.provider import ODPTProvider
+from eta.providers.odpt.provider import ODPTJSONProvider
 from eta.storage.base import StaticDB
 from eta.storage.sqlite import SQLiteStaticDB
 
@@ -21,7 +21,7 @@ class AppContext:
 
         if self._provider is None:
             client = await self._stack.enter_async_context(aclosing(ODPTClient()))
-            self._provider = ODPTProvider(client)
+            self._provider = ODPTJSONProvider(client)
 
         return self._provider
 

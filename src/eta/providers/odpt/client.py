@@ -1,6 +1,8 @@
 import os
 import asyncio
-from typing import Any, Self
+import io
+import zipfile
+from typing import Self, Any, Iterable
 
 import httpx
 from pydantic import BaseModel
@@ -15,6 +17,7 @@ BASE_URL = "https://api.odpt.org/api/v4"
 ACCESS_TOKEN_PARAM = "acl:consumerKey"
 ACCESS_TOKEN_MASK = "ACCESS_TOKEN_IS_MASKED"
 
+TIMEOUT = 30
 MAX_CONCURRENT_REQUESTS = 1
 
 def redact_access_token(request: httpx.Request) -> None:
@@ -39,17 +42,18 @@ class ODPTClient:
         self._client = httpx.AsyncClient(
                 base_url = base_url,
                 params = {ACCESS_TOKEN_PARAM: access_token},
-                headers = {"Accept": "application/json"},
+                follow_redirects = True,
+                timeout = TIMEOUT,
                 transport = transport,
             )
 
         self._semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
-    async def get(self: Self, rdf_type: str, params: dict[str, str] | None = None) -> list[dict[str, Any]]:
+    async def send(self, path: str, params: dict[str, str] | None = None, headers: dict[str, str] | None = None) -> httpx.Response:
 
         try:
             async with self._semaphore:
-                response = await self._client.get(f"./{rdf_type}", params=params)
+                response = await self._client.get(f"./{path}", params=params, headers=headers)
         except httpx.RequestError as error:
             redact_access_token(error.request)
             raise
@@ -57,13 +61,37 @@ class ODPTClient:
         redact_access_token(response.request)
         response.raise_for_status()
 
-        body: list[dict[str, Any]] = response.json()
+        return response        
 
-        return body
+    async def get_json(self: Self, rdf_type: str, params: dict[str, str] | None = None) -> list[dict[str, Any]]:
+
+        headers = {"Accept": "application/json"}
+
+        response = await self.send(rdf_type, params, headers)
+
+        return response.json()
+
+    async def get_files(self, operator: str, name: str, date: str, target_file_names: Iterable[str]) -> dict[str, str]:
+
+        response = await self.send(f"files/odpt/{operator}/{name}.zip", {"date": date})
+
+        content =  response.content
+
+        with zipfile.ZipFile(io.BytesIO(content)) as zip_file:
+
+            file_names = set(zip_file.namelist())
+
+            files: dict[str, str] = {}
+            for target_file_name in target_file_names:
+                if target_file_name in file_names:
+                    files[target_file_name] = zip_file.read(target_file_name).decode("utf-8-sig")
+
+            return files
+
 
     async def build[M: BaseModel](self, model: type[M], rdf_type: str, params: dict[str, str] | None = None) -> list[M]:
 
-        return [model.model_validate(item) for item in await self.get(rdf_type, params)]
+        return [model.model_validate(item) for item in await self.get_json(rdf_type, params)]
 
     async def aclose(self: Self) -> None:
 
