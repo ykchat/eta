@@ -1,7 +1,7 @@
 [project]
 name = "eta"
 version = "0.1.0"
-description = "Add your description here"
+description = "CLI for bus arrival information"
 readme = "README.md"
 authors = [
     { name = "ykchat" }
@@ -83,7 +83,7 @@ no-default-feature = true
 
 [tool.pixi.feature.audit.dependencies]
 python = "3.14.*"
-pip-audit = "*"
+pip-audit = ">=2.10.1,<3"
 filelock = ">=4.3.0,<5"
 
 [tool.pixi.feature.audit.tasks]

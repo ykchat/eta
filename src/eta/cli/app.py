@@ -38,7 +38,7 @@ def search(
 @app.command("update", help="Import local data.")
 @render.handle_errors
 def update(
-    target: Annotated[Target, typer.Argument(help="What to search")],
+    target: Annotated[Target, typer.Argument(help="What to update")],
     source_id: Annotated[str | None, typer.Option("--source", help="Source to import (all when omitted)")] = None,
 ) -> None:
 

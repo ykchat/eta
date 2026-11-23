@@ -34,10 +34,10 @@ async def update_operators(context: Context, source_id: str | None = None) -> li
         source_ids = [source_id]
 
     operators: list[Operator] = []
-    for source_id in source_ids:
-        provider = await context.provider(source_id)
+    for id in source_ids:
+        provider = await context.provider(id)
         operators_from_source = await provider.get_operators()
-        context.static_db().save_operators(source_id, operators_from_source)
+        context.static_db().save_operators(id, operators_from_source)
         operators.extend(operators_from_source)
 
     return operators

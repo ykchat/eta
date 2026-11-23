@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS operators (
 );
 CREATE TABLE IF NOT EXISTS updates (
     table_name  TEXT NOT NULL,            -- name of Table
-    source_id   TEXT NOT NULL,            -- id of Sourc
+    source_id   TEXT NOT NULL,            -- id of Source
     updated_at  TEXT NOT NULL,            -- ISO 8601(UTC)
     PRIMARY KEY (table_name, source_id)
 );
@@ -62,11 +62,11 @@ class SQLiteStaticDB:
 
     def get_sources(self) -> list[Source]:
 
-        sources = self.connection().execute(GET_SOURCES_SQL).fetchall()
+        sources = self._connection.execute(GET_SOURCES_SQL).fetchall()
 
         return [
-            Source.model_validate({"id": id, "operator_count": operators, "updated_at": updated_at})
-            for id, operators, updated_at in sources
+            Source.model_validate({"id": id, "operator_count": operator_count, "updated_at": updated_at})
+            for id, operator_count, updated_at in sources
         ]
 
     def get_operators(self: Self) -> list[Operator]:
