@@ -8,7 +8,7 @@ from typing import Self, Any, Iterable
 import httpx
 from pydantic import BaseModel
 
-from eta import config
+from eta import config, errors
 
 ENV_FILE_NAME = "odpt.env"
 ACCESS_TOKEN_ENV = "ODPT_ACCESS_TOKEN"
@@ -28,8 +28,8 @@ def redact_access_token(request: httpx.Request) -> None:
 class ODPTClient:
 
     def __init__(
-            self: Self, 
-            access_token: str | None = None, 
+            self: Self,
+            access_token: str | None = None,
             base_url: str = BASE_URL,
             transport: httpx.AsyncBaseTransport | None = None,
         ) -> None:
@@ -38,7 +38,7 @@ class ODPTClient:
             config.load_env(ENV_FILE_NAME)
             access_token = os.getenv(ACCESS_TOKEN_ENV)
         if not access_token:
-            raise config.ConfigError(f"{ACCESS_TOKEN_ENV} not found")        
+            raise errors.ConfigError(f"{ACCESS_TOKEN_ENV} not found")
 
         self._client = httpx.AsyncClient(
                 base_url = base_url,
@@ -62,7 +62,7 @@ class ODPTClient:
         redact_access_token(response.request)
         response.raise_for_status()
 
-        return response        
+        return response
 
     async def get_json(self: Self, rdf_type: str, params: dict[str, str] | None = None) -> list[dict[str, Any]]:
 
