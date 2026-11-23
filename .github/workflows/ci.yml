@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:          # プルリクエストを作ったとき、更新したとき
+  push:
+    branches: [main]     # main に入ったとき
+
+permissions:
+  contents: read         # リポジトリを読むだけ(書き込みはさせない)
+
+jobs:
+  check:
+    runs-on: windows-latest     # pyproject.toml の platforms が win-64 だけなので、Windows で動かす
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: prefix-dev/setup-pixi@v0.11.3
+        with:
+          environments: dev     # pytest と pyright が入っている環境
+          locked: true          # pixi.lock のとおりに入れる(lock と pyproject.toml が食い違えば失敗)
+
+      - run: pixi run -e dev typecheck
+
+      - run: pixi run -e dev test
