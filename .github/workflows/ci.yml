@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read         # リポジトリを読むだけ(書き込みはさせない)
+  checks: write          # テストの結果を、チェックとして書き込むため
 
 jobs:
   check:
@@ -21,4 +22,11 @@ jobs:
 
       - run: pixi run -e dev typecheck
 
-      - run: pixi run -e dev test
+      - run: pixi run -e dev test --junitxml=test-results.xml
+
+      - uses: dorny/test-reporter@v3
+        if: ${{ !cancelled() }}          # テストが失敗しても、結果は出す
+        with:
+          name: pytest
+          path: test-results.xml
+          reporter: java-junit

@@ -15,3 +15,5 @@ wheels/
 
 .vscode
 .pytest_cache
+
+test-results.xml
