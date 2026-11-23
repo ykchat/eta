@@ -1,0 +1,6 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"   # .github/workflows の uses: の版を見張る
+    directory: "/"
+    schedule:
+      interval: "weekly"                  # 週に1回、新しい版がないかを調べる
