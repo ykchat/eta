@@ -3,18 +3,18 @@ from typing import Self
 import pytest
 
 from eta import services, errors
-from eta.models import Operator
+from eta.models import Source, Operator
 
 pytestmark = pytest.mark.anyio
 
 TOEI = Operator(
-        id="odpt.Operator:Toei", 
-        name="Toei", 
+        id="odpt.Operator:Toei",
+        name="Toei",
         titles={"ja": "東京都交通局", "en": "Bureau of Transportation, Tokyo Metropolitan Government"}
     )
 RINKO = Operator(
-        id="odpt.Operator:Rinko", 
-        name="Rinko", 
+        id="odpt.Operator:Rinko",
+        name="Rinko",
         titles={"ja": "川崎鶴見臨港バス"}
     )
 
@@ -33,6 +33,13 @@ class FakeStaticDB:
     def __init__(self: Self, operators_by_source: dict[str, list[Operator]] | None = None) -> None:
 
         self.operators_by_source = operators_by_source or {}
+
+    def get_sources(self: Self) -> list[Source]:
+
+        return [
+            Source(id=source_id, operator_count=len(operators))
+            for source_id, operators in self.operators_by_source.items()
+        ]
 
     def get_operators(self: Self) -> list[Operator]:
 
@@ -64,6 +71,14 @@ class FakeContext:
     def static_db(self: Self) -> FakeStaticDB:
 
         return self._static_db
+
+async def test_get_sources() -> None:
+
+    context = FakeContext({"odpt_gtfs": [RINKO]})
+
+    sources = await services.get_sources(context)
+
+    assert [(source.id, source.operator_count) for source in sources] == [("odpt_json", 0), ("odpt_gtfs", 1)]
 
 async def test_update_operators() -> None:
 

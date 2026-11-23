@@ -9,6 +9,23 @@ from eta.storage.sqlite import SQLiteStaticDB, SQLITE_FILE_NAME
 
 TOEI = Operator(id="odpt.Operator:Toei", name="Toei", titles={"ja": "東京都交通局"})
 RINKO = Operator(id="odpt.Operator:Rinko", name="Rinko", titles={"ja": "川崎鶴見臨港バス"})
+KEIO = Operator(id="odpt.Operator:Keio", name="Keio", titles={"ja": "京王電鉄"})
+
+def test_get_sources(tmp_path: Path) -> None:
+
+    static_db = SQLiteStaticDB(tmp_path / SQLITE_FILE_NAME)
+
+    with closing(static_db.connection()):
+        assert static_db.get_sources() == []      # まだ何も取り込んでいない
+
+        static_db.save_operators("odpt_json", [TOEI, KEIO])
+        static_db.save_operators("odpt_gtfs", [RINKO])
+
+        gtfs, json = static_db.get_sources()
+
+    assert (gtfs.id, gtfs.operator_count) == ("odpt_gtfs", 1)
+    assert (json.id, json.operator_count) == ("odpt_json", 2)
+    assert json.updated_at is not None
 
 def test_empty_at_first(tmp_path: Path) -> None:
 
