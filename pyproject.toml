@@ -55,6 +55,7 @@ solve-group = "default"
 
 [tool.pixi.tasks]
 eta = "eta"
+eta-bws = "bws run --project-id $BWS_PROJECT_ID -- eta"
 
 [tool.pixi.feature.dev.tasks]
 typecheck = "pyright"
