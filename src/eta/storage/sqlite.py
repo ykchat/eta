@@ -4,7 +4,7 @@ import sqlite3
 from typing import Self
 
 from eta import config
-from eta.models import Operator
+from eta.models import Source, Operator
 
 SQLITE_FILE_NAME = "eta.sqlite3"
 
@@ -29,6 +29,15 @@ DROP TABLE IF EXISTS operators;
 DROP TABLE IF EXISTS updates;
 """
 
+GET_SOURCES_SQL = """
+SELECT updates.source_id, COUNT(operators.id), updates.updated_at
+FROM updates
+LEFT JOIN operators ON operators.source_id = updates.source_id
+WHERE updates.table_name = 'operators'
+GROUP BY updates.source_id
+ORDER BY updates.source_id
+"""
+
 class SQLiteStaticDB:
 
     def __init__(self: Self, path: Path | None = None) -> None:
@@ -45,17 +54,29 @@ class SQLiteStaticDB:
             self._connection.executescript(DROP_SQL)
             self._connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
 
-        self._connection.executescript(CREATE_SQL)        
+        self._connection.executescript(CREATE_SQL)
 
     def connection(self: Self) -> sqlite3.Connection:
 
         return self._connection
 
+    def get_sources(self) -> list[Source]:
+
+        sources = self.connection().execute(GET_SOURCES_SQL).fetchall()
+
+        return [
+            Source.model_validate({"id": id, "operator_count": operators, "updated_at": updated_at})
+            for id, operators, updated_at in sources
+        ]
+
     def get_operators(self: Self) -> list[Operator]:
 
         operators = self._connection.execute("SELECT operator FROM operators ORDER BY id").fetchall()
 
-        return [Operator.model_validate_json(operator) for (operator,) in operators]
+        return [
+            Operator.model_validate_json(operator)
+            for (operator,) in operators
+        ]
 
     def save_operators(self: Self, source_id: str, operators: list[Operator]) -> None:
 

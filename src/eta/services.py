@@ -1,6 +1,28 @@
-from eta.models import Operator
+from eta.models import Source, Operator
 from eta.context import Context
 from eta.errors import SourceNotFoundError
+
+async def get_sources(context: Context) -> list[Source]:
+
+    sources_by_id = {source.id: source for source in context.static_db().get_sources()}
+
+    return [sources_by_id.get(id, Source(id=id)) for id in context.source_ids()]
+
+def matches(operator: Operator, query: str) -> bool:
+
+    query = query.casefold()
+    targets = (operator.title("ja"), operator.title("en"), operator.name)
+
+    return any(query in target.casefold() for target in targets if target)
+
+async def get_operators(context: Context, query: str | None) -> list[Operator]:
+
+    operators = context.static_db().get_operators()
+
+    if not query:
+        return operators
+
+    return [operator for operator in operators if matches(operator, query)]
 
 async def update_operators(context: Context, source_id: str | None = None) -> list[Operator]:
 
@@ -19,19 +41,3 @@ async def update_operators(context: Context, source_id: str | None = None) -> li
         operators.extend(operators_from_source)
 
     return operators
-
-async def get_operators(context: Context, query: str | None) -> list[Operator]:
-
-    operators = context.static_db().get_operators()
-
-    if not query:
-        return operators
-
-    return [operator for operator in operators if matches(operator, query)]
-
-def matches(operator: Operator, query: str) -> bool:
-
-    query = query.casefold()
-    targets = (operator.title("ja"), operator.title("en"), operator.name)
-
-    return any(query in target.casefold() for target in targets if target) 

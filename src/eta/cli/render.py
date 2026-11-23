@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.markup import escape
 
-from eta.models import Operator
+from eta.models import Source, Operator
 from eta.errors import ConfigError, SourceNotFoundError
 
 console = Console()
@@ -34,6 +34,27 @@ def handle_errors[**P, T](command: Callable[P, T]) -> Callable[P, T]:
 
     return wrapper
 
+def show_sources(sources: list[Source]) -> None:
+
+    table = Table(
+        title=f"取得元: {len(sources)} 件",
+        title_justify="left",
+        header_style="bold cyan",
+    )
+    table.add_column("取得元", style="bold")
+    table.add_column("事業者数", justify="right")
+    table.add_column("更新日時")
+
+    for source in sources:
+        updated_at = source.updated_at.astimezone().strftime("%Y-%m-%d %H:%M") if source.updated_at else "-"
+        table.add_row(
+            escape(source.id),
+            str(source.operator_count),
+            updated_at
+        )
+
+    console.print(table)
+
 def show_operators(operators: list[Operator], query: str | None) -> None:
 
     if not operators:
@@ -57,4 +78,5 @@ def show_operators(operators: list[Operator], query: str | None) -> None:
             escape(operator.title("en") or "-"),
         )
 
-    console.print(table)    
+    console.print(table)
+

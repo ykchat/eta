@@ -89,6 +89,16 @@ pixi run eta search operators 臨港
 
 ## コマンドリファレンス
 
+### 取得元を一覧する
+
+```powershell
+pixi run eta sources list
+```
+
+取得元ごとに、取り込んだ事業者の数と、最後に取り込んだ日時を表示します。
+まだ取り込んでいない場合は、事業者数が0、日時が `-` になります。
+`--source` に指定する取得元 は、ここで確認できます。
+
 ### 事業者を取り込む
 
 ```powershell
@@ -106,7 +116,7 @@ pixi run eta search operators
 pixi run eta search operators <検索文字列>
 ```
 
-検索対象は、名前（`KeioBus` など、ID の一部）と、日本語・英語の名称です（大文字・小文字は区別しません）。
+検索対象は、事業者のID（`KeioBus` など）と日本語・英語の名称です（大文字・小文字は区別しません）。
 
 ## データ取得元
 
