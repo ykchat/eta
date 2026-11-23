@@ -1,4 +1,4 @@
-from typing import Self, Iterable
+from typing import Self
 
 from eta import config
 from eta.models import Operator

@@ -20,34 +20,46 @@ RINKO = Operator(
 
 class FakeProvider:
 
+    def __init__(self: Self, operators: list[Operator]) -> None:
+
+        self._operators = operators
+
     async def get_operators(self: Self) -> list[Operator]:
 
-        return [TOEI, RINKO]
+        return self._operators
 
 class FakeStaticDB:
 
-    def __init__(self: Self, operators: list[Operator] | None = None) -> None:
+    def __init__(self: Self, operators_by_source: dict[str, list[Operator]] | None = None) -> None:
 
-        self.operators = operators or []
+        self.operators_by_source = operators_by_source or {}
 
     def get_operators(self: Self) -> list[Operator]:
 
-        return self.operators
+        operators: list[Operator] = []
+        for operators_from_source in self.operators_by_source.values():
+            operators.extend(operators_from_source)
+
+        return operators
 
     def save_operators(self: Self, source_id: str, operators: list[Operator]) -> None:
 
-        self.operators = operators
+        self.operators_by_source[source_id] = operators
 
 class FakeContext:
 
-    def __init__(self: Self, operators: list[Operator] | None = None) -> None:
+    def __init__(self: Self, operators: dict[str, list[Operator]] | None = None) -> None:
 
-        self._provider = FakeProvider()
+        self._providers = {"odpt_json": FakeProvider([TOEI]), "odpt_gtfs": FakeProvider([RINKO])}
         self._static_db = FakeStaticDB(operators)
 
-    async def provider(self: Self) -> FakeProvider:
+    def source_ids(self: Self) -> list[str]:
 
-        return self._provider
+        return list(self._providers)
+
+    async def provider(self: Self, source_id: str) -> FakeProvider:
+
+        return self._providers[source_id]
 
     def static_db(self: Self) -> FakeStaticDB:
 
@@ -60,11 +72,11 @@ async def test_update_operators() -> None:
     operators = await services.update_operators(context)
 
     assert operators == [TOEI, RINKO]
-    assert context.static_db().operators == [TOEI, RINKO] 
+    assert context.static_db().operators_by_source == {"odpt_json": [TOEI], "odpt_gtfs": [RINKO]}
 
 async def test_get_all_operators() -> None:
 
-    context = FakeContext([TOEI, RINKO])
+    context = FakeContext({"odpt_json": [TOEI], "odpt_gtfs": [RINKO]})
 
     assert await services.get_operators(context, None) == [TOEI, RINKO]
 
@@ -77,6 +89,6 @@ async def test_get_all_operators() -> None:
 ])
 async def test_get_operators_by_query(query: str, expected: list[Operator]) -> None:
 
-    context = FakeContext([TOEI, RINKO])
+    context = FakeContext({"odpt_json": [TOEI], "odpt_gtfs": [RINKO]})
 
     assert await services.get_operators(context, query) == expected

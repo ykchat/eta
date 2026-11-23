@@ -5,25 +5,36 @@ from typing import Self, Concatenate
 
 from eta.providers.base import Provider
 from eta.providers.odpt.client import ODPTClient
-from eta.providers.odpt.provider import ODPTJSONProvider
+from eta.providers.odpt.provider import ODPTJSONProvider, ODPTGTFSProvider
 from eta.storage.base import StaticDB
 from eta.storage.sqlite import SQLiteStaticDB
+
+PROVIDERS: dict[str, Callable[[ODPTClient], Provider]] = {
+    "odpt_json": ODPTJSONProvider,
+    "odpt_gtfs": ODPTGTFSProvider,
+}
 
 class AppContext:
 
     def __init__(self: Self, stack: AsyncExitStack) -> None:
 
         self._stack = stack
-        self._provider: Provider | None = None
+        self._client: ODPTClient | None = None
+        self._providers: dict[str, Provider] = {}
         self._static_db: StaticDB | None = None
 
-    async def provider(self: Self) -> Provider:
+    def source_ids(self: Self) -> list[str]:
 
-        if self._provider is None:
-            client = await self._stack.enter_async_context(aclosing(ODPTClient()))
-            self._provider = ODPTJSONProvider(client)
+        return list(PROVIDERS)
 
-        return self._provider
+    async def provider(self: Self, source_id: str) -> Provider:
+
+        if source_id not in self._providers:
+            if self._client is None:
+                self._client = await self._stack.enter_async_context(aclosing(ODPTClient()))
+            self._providers[source_id] = PROVIDERS[source_id](self._client)
+
+        return self._providers[source_id]
 
     def static_db(self: Self) -> StaticDB:
 

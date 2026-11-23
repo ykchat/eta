@@ -3,9 +3,12 @@ from eta.context import Context
 
 async def update_operators(context: Context) -> list[Operator]:
 
-    provider = await context.provider()
-    operators = await provider.get_operators()
-    context.static_db().save_operators("odpt_json", operators)
+    operators: list[Operator] = []
+    for source_id in context.source_ids():
+        provider = await context.provider(source_id)
+        operators_from_source = await provider.get_operators()
+        context.static_db().save_operators(source_id, operators_from_source)
+        operators.extend(operators_from_source)
 
     return operators
 
