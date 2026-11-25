@@ -26,7 +26,7 @@ build-backend = "uv_build"
 # pixi 共通
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["win-64"]
+platforms = ["win-64", "linux-64"]
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
@@ -55,6 +55,7 @@ solve-group = "default"
 [tool.pixi.feature.dev.dependencies]
 pytest = ">=9.2.0,<10"
 pyright = ">=1.1.414,<2"
+nodejs = ">=26.13.1,<27"
 
 [tool.pixi.feature.dev.tasks]
 typecheck = "pyright"
