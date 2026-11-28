@@ -29,3 +29,12 @@ class Operator(TitledModel):
 
     id: str
     name: str
+
+# 停留所
+class Stop(TitledModel):
+
+    id: str
+    name: str
+    operator_id: str
+    parent_id: str | None = None    # 属するまとまり
+    platform: str | None = None     # のりば番号
