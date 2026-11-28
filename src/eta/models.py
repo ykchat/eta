@@ -30,11 +30,11 @@ class Operator(TitledModel):
     id: str
     name: str
 
-# 停留所
+# 停留所・標柱
 class Stop(TitledModel):
 
     id: str
     name: str
     operator_id: str
-    parent_id: str | None = None    # 属するまとまり
+    parent_id: str | None = None    # 標柱の場合は属する停留所
     platform: str | None = None     # のりば番号

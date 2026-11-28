@@ -1,7 +1,9 @@
 from typing import Self, Protocol
 
-from eta.models import Operator
+from eta.models import Operator, Stop
 
 class Provider(Protocol):
 
     async def get_operators(self: Self) -> list[Operator]: ...
+
+    async def get_stops(self: Self) -> list[Stop]: ...
