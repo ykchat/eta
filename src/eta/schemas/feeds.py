@@ -7,11 +7,6 @@ class ODPTGTFSFeed(BaseModel):
     operator: str
     name: str
     date: str
-    
-    def id(self) -> str:
-
-        return f"odpt.Operator:{self.operator}"
-
 
 class ODPTGTFSFeeds(BaseModel):
 

@@ -19,7 +19,7 @@ class ODPTJSONProvider:
 
         operators = await self._client.build(ODPTOperator, "odpt:Operator")
 
-        return [ODPTJSONProvider.build_operator(operator) for operator in operators] 
+        return [ODPTJSONProvider.build_operator(operator) for operator in operators]
 
     @classmethod
     def build_operator(cls: type[Self], operator: ODPTOperator) -> Operator:
@@ -30,7 +30,7 @@ class ODPTJSONProvider:
             titles.setdefault("ja", operator.title)
 
         return Operator(id=operator.id, name=operator.name(), titles=titles)
-   
+
 class ODPTGTFSProvider:
 
     def __init__(self: Self, client: ODPTClient, feeds: list[ODPTGTFSFeed] | None = None) -> None:
@@ -47,11 +47,11 @@ class ODPTGTFSProvider:
         for feed in self._feeds:
             files = await self._client.get_files(feed.operator, feed.name, feed.date, ["agency.txt"])
             agency = GTFSAgency.model_validate(files["agency.txt"][0])
-            operators.append(ODPTGTFSProvider.build_operator(feed, agency))
+            operators.append(ODPTGTFSProvider.build_operator(agency))
 
         return operators
 
     @classmethod
-    def build_operator(cls: type[Self], feed: ODPTGTFSFeed, agency: GTFSAgency) -> Operator:
+    def build_operator(cls: type[Self], agency: GTFSAgency) -> Operator:
 
-        return Operator(id=feed.id(), name=feed.operator, titles={"ja": agency.agency_name})
+        return Operator(id=agency.operator_id(), name=agency.agency_name, titles={"ja": agency.agency_name})
