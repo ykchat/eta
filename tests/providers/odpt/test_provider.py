@@ -36,11 +36,11 @@ def test_build_operator_with_titles_from_odpt() -> None:
 def test_build_operator_without_titles_from_odpt() -> None:
 
     odpt = ODPTOperator.model_validate({
-            "owl:sameAs": "odpt.Operator:Rinko", 
+            "owl:sameAs": "odpt.Operator:Rinko",
             "dc:title": "川崎鶴見臨港バス"
         })
 
-    operator = ODPTJSONProvider.build_operator(odpt) 
+    operator = ODPTJSONProvider.build_operator(odpt)
 
     assert operator.title("ja") == "川崎鶴見臨港バス"
     assert operator.title("en") is None
@@ -53,17 +53,15 @@ def test_build_operator_without_any_title_from_odpt() -> None:
 
 def test_build_operator_from_gtfs() -> None:
 
-    feed = ODPTGTFSFeed(operator="KawasakiTsurumiRinkoBus", name="allrinko", date="20261101")
-
     agency = GTFSAgency.model_validate({
             "agency_id": "5020001072478",
             "agency_name": "川崎鶴見臨港バス株式会社",
             "agency_url": "https://www.rinkobus.co.jp/",
         })
 
-    assert ODPTGTFSProvider.build_operator(feed, agency) == Operator(
-            id = "odpt.Operator:KawasakiTsurumiRinkoBus",
-            name = "KawasakiTsurumiRinkoBus",
+    assert ODPTGTFSProvider.build_operator(agency) == Operator(
+            id = "gtfs.Operator:川崎鶴見臨港バス株式会社",
+            name = "川崎鶴見臨港バス株式会社",
             titles = {"ja": "川崎鶴見臨港バス株式会社"},
         )
 
@@ -75,8 +73,8 @@ async def test_get_operators_from_gtfs() -> None:
         operators = await ODPTGTFSProvider(client, [RINKO_FEED]).get_operators()
 
     assert operators == [Operator(
-            id="odpt.Operator:KawasakiTsurumiRinkoBus",
-            name="KawasakiTsurumiRinkoBus",
+            id="gtfs.Operator:川崎鶴見臨港バス株式会社",
+            name="川崎鶴見臨港バス株式会社",
             titles={"ja": "川崎鶴見臨港バス株式会社"},
         )]
 
