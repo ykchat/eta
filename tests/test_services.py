@@ -3,7 +3,7 @@ from typing import Self
 import pytest
 
 from eta import services, errors
-from eta.models import Source, Operator
+from eta.models import Source, Operator, Stop
 
 pytestmark = pytest.mark.anyio
 
@@ -27,6 +27,10 @@ class FakeProvider:
     async def get_operators(self: Self) -> list[Operator]:
 
         return self._operators
+
+    async def get_stops(self: Self) -> list[Stop]:
+
+        raise NotImplementedError
 
 class FakeStaticDB:
 
